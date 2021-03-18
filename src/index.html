@@ -16,10 +16,6 @@
     </form>
     <br />
     <br />
-    <select name="objects" id="objects-select"></select>
-    <button type="button" id="download-button">download</button>
-    <br />
-    <br />
     <br />
     <table id="items">
       <tr>
@@ -34,33 +30,9 @@
   </body>
   <script>
     var progressDiv = document.getElementById('progress');
-    var selectBox = document.getElementById('objects-select');
     var itemsTable = document.getElementById('items');
 
     (function () {
-      document.getElementById('download-button').onclick = function () {
-        const id = selectBox.options[selectBox.selectedIndex].text;
-        progressDiv.hidden = false;
-        axios
-          .get(`/download?id=${id}`, {
-            responseType: 'blob',
-            onDownloadProgress: function (progress) {
-              console.log(progress);
-              progressDiv.innerHTML = `Downloading ${Math.round(
-                (progress.loaded * 100) / progress.total
-              )}%`;
-            },
-          })
-          .then((res) => {
-            progressDiv.hidden = true;
-            const blob = new Blob([res.data]);
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = id;
-            link.click();
-          });
-      };
-
       function getDownloadButton(key) {
         var button = document.createElement('button');
         button.innerHTML = 'Download';
@@ -79,18 +51,11 @@
         return button;
       }
 
-      function logstuff(d) {
-        console.log(`${d}: LOGGGG`);
-      }
-
       function deleteObject(key) {
-        console.log(`${key} DELETING`);
-
         axios({
           method: 'DELETE',
           url: `/delete?id=${key}`,
         }).then((res) => {
-          console.log(`${key} deleted`);
           document.getElementById(key).remove();
         });
       }
@@ -120,9 +85,6 @@
       function initList() {
         axios.get('/objects').then((response) => {
           response.data.forEach((d) => {
-            var option = document.createElement('option');
-            option.text = d;
-            selectBox.add(option);
             var row = itemsTable.insertRow(-1);
             row.setAttribute('id', d);
             var downloadBtn = getDownloadButton(d);

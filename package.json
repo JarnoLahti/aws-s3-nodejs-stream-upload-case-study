@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "nodemon --require dotenv/config --exec babel-node ./index.js"
+    "start": "nodemon --require dotenv/config --exec babel-node ./src/index.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.10",

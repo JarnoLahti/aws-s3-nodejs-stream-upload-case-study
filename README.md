@@ -10,5 +10,5 @@ This was a study mainly on how to use streams to upload and download files from 
 * Add `AWS_S3_BUCKET_NAME=<your bucket name>` to the `.env` file
 * OPTIONAL: Add `PORT=<your port>` to the `.env` file. Default is `PORT=3000`
 * Run `yarn start`
-* Open your browser and go to `http://locahost:<your port>`
+* Open your browser and go to `http://localhost:<your port>`
 
