@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Page Title</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+      integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <h1>AWS Data uploader</h1>
+    <form method="POST" enctype="multipart/form-data" onsubmit="return false;">
+      <input id="file" type="file" name="filefield" />
+      <button type="button" id="form-submit">Upload</button>
+    </form>
+    <br />
+    <br />
+    <select name="objects" id="objects-select"></select>
+    <button type="button" id="download-button">download</button>
+    <br />
+    <br />
+    <br />
+    <table id="items">
+      <tr>
+        <th>name</th>
+        <th>download</th>
+        <th>delete</th>
+      </tr>
+    </table>
+
+    <br />
+    <div id="progress"></div>
+  </body>
+  <script>
+    var progressDiv = document.getElementById('progress');
+    var selectBox = document.getElementById('objects-select');
+    var itemsTable = document.getElementById('items');
+
+    (function () {
+      document.getElementById('download-button').onclick = function () {
+        const id = selectBox.options[selectBox.selectedIndex].text;
+        progressDiv.hidden = false;
+        axios
+          .get(`/download?id=${id}`, {
+            responseType: 'blob',
+            onDownloadProgress: function (progress) {
+              console.log(progress);
+              progressDiv.innerHTML = `Downloading ${Math.round(
+                (progress.loaded * 100) / progress.total
+              )}%`;
+            },
+          })
+          .then((res) => {
+            progressDiv.hidden = true;
+            const blob = new Blob([res.data]);
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = id;
+            link.click();
+          });
+      };
+
+      function getDownloadButton(key) {
+        var button = document.createElement('button');
+        button.innerHTML = 'Download';
+        button.onclick = () => {
+          download(key);
+        };
+        return button;
+      }
+
+      function getDeleteButton(key) {
+        var button = document.createElement('button');
+        button.innerHTML = 'Delete';
+        button.onclick = () => {
+          deleteObject(key);
+        };
+        return button;
+      }
+
+      function logstuff(d) {
+        console.log(`${d}: LOGGGG`);
+      }
+
+      function deleteObject(key) {
+        console.log(`${key} DELETING`);
+
+        axios({
+          method: 'DELETE',
+          url: `/delete?id=${key}`,
+        }).then((res) => {
+          console.log(`${key} deleted`);
+          document.getElementById(key).remove();
+        });
+      }
+
+      function download(key) {
+        progressDiv.hidden = false;
+        progressDiv.innerHTML = 'Downloading 0%';
+        axios({
+          method: 'GET',
+          url: `/download?id=${key}`,
+          responseType: 'blob',
+          onDownloadProgress: function (progress) {
+            progressDiv.innerHTML = `Downloading ${Math.round(
+              (progress.loaded * 100) / progress.total
+            )}%`;
+          },
+        }).then((res) => {
+          progressDiv.hidden = true;
+          const blob = new Blob([res.data]);
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.download = key;
+          link.click();
+        });
+      }
+
+      function initList() {
+        axios.get('/objects').then((response) => {
+          response.data.forEach((d) => {
+            var option = document.createElement('option');
+            option.text = d;
+            selectBox.add(option);
+            var row = itemsTable.insertRow(-1);
+            row.setAttribute('id', d);
+            var downloadBtn = getDownloadButton(d);
+            var deleteBtn = getDeleteButton(d);
+            row.insertCell(0).innerHTML = d;
+            row.insertCell(1).appendChild(downloadBtn);
+            row.insertCell(2).appendChild(deleteBtn);
+          });
+        });
+      }
+
+      initList();
+    })();
+
+    (function () {
+      document.getElementById('form-submit').onclick = function () {
+        var files = document.getElementById('file').files;
+        if (files.length > 0) {
+          var data = new FormData();
+          data.append('file', files[0]);
+          progressDiv.hidden = false;
+          progressDiv.innerHTML = 'Uploading 0%';
+          axios
+            .post('/', data, {
+              onUploadProgress: function (progress) {
+                progressDiv.innerHTML = `Uploading ${Math.round(
+                  (progress.loaded * 100) / progress.total
+                )}%`;
+              },
+            })
+            .then((d) => {
+              progressDiv.hidden = true;
+            });
+        }
+      };
+    })();
+  </script>
+</html>
